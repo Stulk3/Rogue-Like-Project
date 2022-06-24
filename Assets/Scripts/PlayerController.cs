@@ -18,12 +18,16 @@ public class PlayerController : MonoBehaviour
     // Общедоступная маска слоя, которая будет называть, то что останавливает движение
     public LayerMask whatStopsMovement;
 
-
+    private void Awake() 
+    {
+        spriteAnimator = GetComponent<Animator>();
+    }
     // Start is called before the first frame update
     void Start()
     {
         // Точка перемещения преобразована - больше нет родителя.
         movePoint.parent = null;
+        
 
     }
 
@@ -33,6 +37,26 @@ public class PlayerController : MonoBehaviour
         horizontalMovementInput = Input.GetAxisRaw("Horizontal");
         verticalMovementInput = Input.GetAxisRaw("Vertical");
 
+        Debug.Log(verticalMovementInput);
+        Debug.Log(horizontalMovementInput);
+        if(horizontalMovementInput<0)
+        {
+            PlayLeftMoveAnimation();
+        }
+        if(horizontalMovementInput>0)
+        {
+            PlayRightMoveAnimation();
+        }
+        if(verticalMovementInput>0)
+        {
+            PlayUpMoveAnimation();
+        }
+        if(verticalMovementInput<0)
+        {
+            PlayDownMoveAnimation();
+        }
+
+        
         transform.position = Vector3.MoveTowards(transform.position, movePoint.position, moveSpeed * Time.deltaTime);
 
         if(Vector3.Distance(transform.position, movePoint.position) <= .05f)
@@ -54,5 +78,22 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
+    }
+
+    void PlayRightMoveAnimation()
+    {
+        spriteAnimator.Play("Right");
+    }
+    void PlayLeftMoveAnimation()
+    {
+        spriteAnimator.Play("Left");
+    }
+    void PlayUpMoveAnimation()
+    {
+        spriteAnimator.Play("Up");
+    }
+    void PlayDownMoveAnimation()
+    {
+        spriteAnimator.Play("Down");
     }
 }
