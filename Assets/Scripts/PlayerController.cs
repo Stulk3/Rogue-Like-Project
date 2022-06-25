@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
+    public bool isMoving;
     // Аниматор для контроля анимаций
     public Animator spriteAnimator;
     // Показатель горизонтального инпута
@@ -11,6 +12,7 @@ public class PlayerController : MonoBehaviour
     float verticalMovementInput;
     // С какой скоростью будет передвигаться персонаж.
     public float moveSpeed = 5f;
+    public bool noObstacleAhead;
 
     // Точка перемещения.
     public Transform movePoint;
@@ -34,27 +36,43 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+
         horizontalMovementInput = Input.GetAxisRaw("Horizontal");
         verticalMovementInput = Input.GetAxisRaw("Vertical");
 
-        Debug.Log(verticalMovementInput);
-        Debug.Log(horizontalMovementInput);
-        if(horizontalMovementInput<0)
+        spriteAnimator.SetFloat("InputVertical", verticalMovementInput);
+        spriteAnimator.SetFloat("InputHorizontal", horizontalMovementInput);
+
+
+
+        if(horizontalMovementInput < 0 && !isMoving && noObstacleAhead)
         {
             PlayLeftMoveAnimation();
+            spriteAnimator.StopPlayback();
+            HandleVerticalAnimations();
+
         }
-        if(horizontalMovementInput>0)
+        else if(horizontalMovementInput > 0 && !isMoving && noObstacleAhead)
         {
             PlayRightMoveAnimation();
+            spriteAnimator.StopPlayback();
+            HandleVerticalAnimations();
         }
-        if(verticalMovementInput>0)
+
+        if(verticalMovementInput > 0 && !isMoving && noObstacleAhead)
         {
             PlayUpMoveAnimation();
+            spriteAnimator.StopPlayback();
+            HandleHorizontalAnimations();
         }
-        if(verticalMovementInput<0)
+        else if(verticalMovementInput < 0 && !isMoving && noObstacleAhead)
         {
             PlayDownMoveAnimation();
+            spriteAnimator.StopPlayback();
+            HandleHorizontalAnimations();
         }
+        
 
         
         transform.position = Vector3.MoveTowards(transform.position, movePoint.position, moveSpeed * Time.deltaTime);
@@ -67,14 +85,25 @@ public class PlayerController : MonoBehaviour
                 // Проверка на препятсвия впереди, если там ничего нет, то можно идти.
                 if(!Physics2D.OverlapCircle(movePoint.position + new Vector3(horizontalMovementInput, 0f, 0f), .1f, whatStopsMovement))
                 {
+                    noObstacleAhead = true;
                     movePoint.position += new Vector3(horizontalMovementInput, 0f, 0f);
                 }
-            } else if(Mathf.Abs(verticalMovementInput) == 1)
+                else
+                {
+                    noObstacleAhead = false;
+                }
+            } 
+            else if(Mathf.Abs(verticalMovementInput) == 1)
             {
                 // Проверка на препятсвия впереди, если там ничего нет, то можно идти.
                 if(!Physics2D.OverlapCircle(movePoint.position + new Vector3(0f, verticalMovementInput, 0f), .2f, whatStopsMovement))
                 {
+                    noObstacleAhead = true;
                     movePoint.position += new Vector3(0f, verticalMovementInput, 0f);
+                }
+                else
+                {
+                    noObstacleAhead = false;
                 }
             }
         }
@@ -82,18 +111,63 @@ public class PlayerController : MonoBehaviour
 
     void PlayRightMoveAnimation()
     {
+        spriteAnimator.StopPlayback();
         spriteAnimator.Play("Right");
+
     }
     void PlayLeftMoveAnimation()
     {
+        spriteAnimator.StopPlayback();
         spriteAnimator.Play("Left");
     }
     void PlayUpMoveAnimation()
     {
+        spriteAnimator.StopPlayback();
         spriteAnimator.Play("Up");
     }
     void PlayDownMoveAnimation()
     {
+        spriteAnimator.StopPlayback();
         spriteAnimator.Play("Down");
+
+    }
+
+    public void Move()
+    {
+        isMoving = true;
+    }
+    public void Stop()
+    {
+        isMoving = false;
+    }
+
+    private void HandleHorizontalAnimations()
+    {
+        if(horizontalMovementInput < 0 && !isMoving)
+        {
+            PlayLeftMoveAnimation();
+            spriteAnimator.StopPlayback();
+
+
+        }
+        else if(horizontalMovementInput > 0 && !isMoving)
+        {
+            PlayRightMoveAnimation();
+            spriteAnimator.StopPlayback();
+        }
+    }
+
+    private void HandleVerticalAnimations()
+    {
+        if(verticalMovementInput > 0 && !isMoving)
+        {
+            PlayUpMoveAnimation();
+            spriteAnimator.StopPlayback();
+        }
+        else if(verticalMovementInput < 0 && !isMoving)
+        {
+            PlayDownMoveAnimation();
+            spriteAnimator.StopPlayback();
+        }
     }
 }
