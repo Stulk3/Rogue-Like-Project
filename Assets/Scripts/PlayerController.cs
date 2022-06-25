@@ -1,12 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 [RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private GameObject messageBox;
+    [SerializeField] private GameObject textBox;
+    [SerializeField] private GameObject actionBox;
+    Text message;
+    Text action;
     private bool isMoving;
     // Аниматор для контроля анимаций
-    public Animator spriteAnimator;
+    private Animator spriteAnimator;
     // Показатель горизонтального инпута
     float horizontalMovementInput;
     // Показатель вертикального инпута
@@ -14,6 +21,7 @@ public class PlayerController : MonoBehaviour
     // С какой скоростью будет передвигаться персонаж.
     public float moveSpeed = 5f;
     public bool nothingAhead;
+    public bool gameIsFinished = false;
 
     // Точка перемещения.
     public Transform movePoint;
@@ -23,6 +31,8 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        message = textBox.GetComponent<Text>();
+        action = actionBox.GetComponent<Text>();
         spriteAnimator = GetComponent<Animator>();
     }
     void Start()
@@ -31,15 +41,23 @@ public class PlayerController : MonoBehaviour
         movePoint.parent = null;
     }
     void Update()
+    { 
+        if (!gameIsFinished) 
+        {
+            GetAxisInput();
+            HandleAnimationChange();
+
+            CalculateMovePointPosition();
+            MoveToPosition(movePoint.position);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D finishingLine)
     {
-        GetAxisInput();
-
-        HandleAnimationChange();
-
-        CalculateMovePointPosition();
-        MoveToPosition(movePoint.position);
-        
-       
+        gameIsFinished = true;
+        messageBox.SetActive(true);
+        message.text = "Кто-то не верит, а кто-то не знает, но в наших краях не такое бывает. Кто же Россию умом понимает, душа ее сила, ее воспеваем.";
+        action.text = "ПОБЕДА!";
     }
     void MoveToPosition(Vector3 movePosition)
     {
@@ -172,5 +190,10 @@ public class PlayerController : MonoBehaviour
         isMoving = false;
     }
 
-   
+    public void LoadPreviousScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+    }
+
+
 }
