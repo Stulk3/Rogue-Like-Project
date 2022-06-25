@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+[RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
-    public bool isMoving;
+    private bool isMoving;
     // Аниматор для контроля анимаций
     public Animator spriteAnimator;
     // Показатель горизонтального инпута
@@ -12,7 +13,7 @@ public class PlayerController : MonoBehaviour
     float verticalMovementInput;
     // С какой скоростью будет передвигаться персонаж.
     public float moveSpeed = 5f;
-    public bool noObstacleAhead;
+    public bool nothingAhead;
 
     // Точка перемещения.
     public Transform movePoint;
@@ -20,95 +21,97 @@ public class PlayerController : MonoBehaviour
     // Общедоступная маска слоя, которая будет называть, то что останавливает движение
     public LayerMask whatStopsMovement;
 
-    private void Awake() 
+    private void Awake()
     {
         spriteAnimator = GetComponent<Animator>();
     }
-    // Start is called before the first frame update
     void Start()
     {
         // Точка перемещения преобразована - больше нет родителя.
         movePoint.parent = null;
-        
-
     }
-
-    // Update is called once per frame
     void Update()
     {
+        GetAxisInput();
 
+        HandleAnimationChange();
 
+        CalculateMovePointPosition();
+        MoveToPosition(movePoint.position);
+        
+       
+    }
+    void MoveToPosition(Vector3 movePosition)
+    {
+        this.transform.position = Vector3.MoveTowards(transform.position, movePosition, moveSpeed * Time.deltaTime);
+    }
+    void CalculateMovePointPosition()
+    {
+        if (Vector3.Distance(transform.position, movePoint.position) <= .05f)
+        {
+
+            if (Mathf.Abs(horizontalMovementInput) == 1)
+            {
+                // Проверка на препятсвия впереди, если там ничего нет, то можно идти.
+                if (!Physics2D.OverlapCircle(movePoint.position + new Vector3(horizontalMovementInput, 0f, 0f), .1f, whatStopsMovement))
+                {
+                    nothingAhead = true;
+                    movePoint.position += new Vector3(horizontalMovementInput, 0f, 0f);
+                }
+                else
+                {
+                    nothingAhead = false;
+                }
+            }
+            else if (Mathf.Abs(verticalMovementInput) == 1)
+            {
+                // Проверка на препятсвия впереди, если там ничего нет, то можно идти.
+                if (!Physics2D.OverlapCircle(movePoint.position + new Vector3(0f, verticalMovementInput, 0f), .2f, whatStopsMovement))
+                {
+                    nothingAhead = true;
+                    movePoint.position += new Vector3(0f, verticalMovementInput, 0f);
+                }
+                else
+                {
+                    nothingAhead = false;
+                }
+            }
+        }
+    }
+    void GetAxisInput()
+    {
         horizontalMovementInput = Input.GetAxisRaw("Horizontal");
         verticalMovementInput = Input.GetAxisRaw("Vertical");
-
-        spriteAnimator.SetFloat("InputVertical", verticalMovementInput);
-        spriteAnimator.SetFloat("InputHorizontal", horizontalMovementInput);
-
-
-
-        if(horizontalMovementInput < 0 && !isMoving && noObstacleAhead)
+    }
+    void HandleAnimationChange()
+    {
+        if (horizontalMovementInput < 0 && !isMoving && nothingAhead)
         {
             PlayLeftMoveAnimation();
             spriteAnimator.StopPlayback();
             HandleVerticalAnimations();
 
         }
-        else if(horizontalMovementInput > 0 && !isMoving && noObstacleAhead)
+        else if (horizontalMovementInput > 0 && !isMoving && nothingAhead)
         {
             PlayRightMoveAnimation();
             spriteAnimator.StopPlayback();
             HandleVerticalAnimations();
         }
 
-        if(verticalMovementInput > 0 && !isMoving && noObstacleAhead)
+        if (verticalMovementInput > 0 && !isMoving && nothingAhead)
         {
             PlayUpMoveAnimation();
             spriteAnimator.StopPlayback();
             HandleHorizontalAnimations();
         }
-        else if(verticalMovementInput < 0 && !isMoving && noObstacleAhead)
+        else if (verticalMovementInput < 0 && !isMoving && nothingAhead)
         {
             PlayDownMoveAnimation();
             spriteAnimator.StopPlayback();
             HandleHorizontalAnimations();
         }
-        
-
-        
-        transform.position = Vector3.MoveTowards(transform.position, movePoint.position, moveSpeed * Time.deltaTime);
-
-        if(Vector3.Distance(transform.position, movePoint.position) <= .05f)
-        {
-
-            if(Mathf.Abs(horizontalMovementInput) == 1)
-            {
-                // Проверка на препятсвия впереди, если там ничего нет, то можно идти.
-                if(!Physics2D.OverlapCircle(movePoint.position + new Vector3(horizontalMovementInput, 0f, 0f), .1f, whatStopsMovement))
-                {
-                    noObstacleAhead = true;
-                    movePoint.position += new Vector3(horizontalMovementInput, 0f, 0f);
-                }
-                else
-                {
-                    noObstacleAhead = false;
-                }
-            } 
-            else if(Mathf.Abs(verticalMovementInput) == 1)
-            {
-                // Проверка на препятсвия впереди, если там ничего нет, то можно идти.
-                if(!Physics2D.OverlapCircle(movePoint.position + new Vector3(0f, verticalMovementInput, 0f), .2f, whatStopsMovement))
-                {
-                    noObstacleAhead = true;
-                    movePoint.position += new Vector3(0f, verticalMovementInput, 0f);
-                }
-                else
-                {
-                    noObstacleAhead = false;
-                }
-            }
-        }
     }
-
     void PlayRightMoveAnimation()
     {
         spriteAnimator.StopPlayback();
@@ -131,16 +134,6 @@ public class PlayerController : MonoBehaviour
         spriteAnimator.Play("Down");
 
     }
-
-    public void Move()
-    {
-        isMoving = true;
-    }
-    public void Stop()
-    {
-        isMoving = false;
-    }
-
     private void HandleHorizontalAnimations()
     {
         if(horizontalMovementInput < 0 && !isMoving)
@@ -170,4 +163,14 @@ public class PlayerController : MonoBehaviour
             spriteAnimator.StopPlayback();
         }
     }
+    public void Move()
+    {
+        isMoving = true;
+    }
+    public void Stop()
+    {
+        isMoving = false;
+    }
+
+   
 }
