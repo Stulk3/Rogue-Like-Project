@@ -52,12 +52,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D finishingLine)
+    private void OnTriggerEnter2D(Collider2D trigger)
     {
-        gameIsFinished = true;
-        messageBox.SetActive(true);
-        message.text = "Кто-то не верит, а кто-то не знает, но в наших краях не такое бывает. Кто же Россию умом понимает, душа ее сила, ее воспеваем.";
-        action.text = "ПОБЕДА!";
+        if(trigger.tag == "Creature")
+        {
+            gameIsFinished = true;
+            messageBox.SetActive(true);
+            message.text = "Не нужно золотых монет и дорогих камней. До них мне просто дела нет, тебе не убежать.";
+            action.text = "СМЕРТЬ"; 
+            GetComponent<SpriteRenderer>().enabled = false;
+        }
+
+        if(trigger.tag == "Finish")
+        {
+            gameIsFinished = true;
+            messageBox.SetActive(true);
+            message.text = "Кто-то не верит, а кто-то не знает, но в наших краях не такое бывает. Кто же Россию умом понимает, душа ее сила, ее воспеваем.";
+            action.text = "ПОБЕДА!";
+        }
+        
     }
     void MoveToPosition(Vector3 movePosition)
     {

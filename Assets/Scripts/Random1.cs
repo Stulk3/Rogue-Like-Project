@@ -9,5 +9,9 @@ public class Random1 : MonoBehaviour
     {
         int rand = Random.Range(0, objects. Length);
         Instantiate(objects[rand], transform. position, Quaternion.identity);
+        if (rand == 5)
+        {
+            GetComponent<BoxCollider2D>().enabled = false;
+        }
     }
  }
